@@ -26,7 +26,13 @@ def build_index(path: str, encoding: str = "utf-8") -> LogIndex:
 
     Lines whose timestamp cannot be parsed are still indexed with
     ``timestamp=None`` so that the offset list stays aligned with lines.
+
+    Raises:
+        FileNotFoundError: If *path* does not exist.
+        PermissionError: If the file cannot be opened for reading.
     """
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Log file not found: {path!r}")
     index = LogIndex(path=path)
     with open(path, "rb") as fh:
         while True:
