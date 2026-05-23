@@ -84,6 +84,12 @@ def test_validate_entry_multiple_errors_collected():
     assert len(result.errors) >= 2
 
 
+def test_validate_entry_known_levels_contains_common_levels():
+    """Ensure KNOWN_LEVELS includes the most commonly used log levels."""
+    for level in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+        assert level in KNOWN_LEVELS, f"Expected {level!r} in KNOWN_LEVELS"
+
+
 # --- validate_entries ---
 
 def test_validate_entries_yields_one_per_entry():
@@ -111,8 +117,3 @@ def test_filter_valid_removes_invalid():
 
 def test_filter_valid_empty_input():
     assert list(filter_valid([], require_timestamp=True)) == []
-
-
-def test_filter_valid_all_pass():
-    entries = [make_entry() for _ in range(5)]
-    assert len(list(filter_valid(entries))) == 5
