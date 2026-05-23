@@ -87,3 +87,14 @@ def test_write_entries_empty_list():
     count = write_entries([], fmt="text", dest=buf)
     assert count == 0
     assert buf.getvalue() == ""
+
+
+def test_write_entries_json_timestamp_format():
+    """Ensure the JSON output includes a properly formatted ISO 8601 timestamp."""
+    buf = io.StringIO()
+    write_entries([make_entry()], fmt="json", dest=buf)
+    data = json.loads(buf.getvalue().strip())
+    assert "timestamp" in data
+    # Verify the timestamp can be parsed back and matches the original
+    parsed = datetime.fromisoformat(data["timestamp"])
+    assert parsed == TS
