@@ -23,6 +23,28 @@ def _entry_key(entry: LogEntry, fields: tuple[str, ...]) -> str:
     return hashlib.md5(raw.encode(), usedforsecurity=False).hexdigest()
 
 
+def _validate_dedup_args(fields: tuple[str, ...], keep: str) -> None:
+    """Validate common arguments shared by dedup functions.
+
+    Raises:
+        ValueError: If ``keep`` is not ``'first'`` or ``'last'``, if
+            ``fields`` is empty, or if ``fields`` contains an unrecognised
+            field name.
+    """
+    if keep not in ("first", "last"):
+        raise ValueError(f"keep must be 'first' or 'last', got {keep!r}")
+
+    if not fields:
+        raise ValueError("fields must not be empty")
+
+    unknown_fields = set(fields) - VALID_FIELDS
+    if unknown_fields:
+        raise ValueError(
+            f"unknown field(s): {sorted(unknown_fields)}; "
+            f"valid fields are {sorted(VALID_FIELDS)}"
+        )
+
+
 def dedup_entries(
     entries: Iterable[LogEntry],
     fields: tuple[str, ...] = ("level", "message"),
@@ -43,18 +65,7 @@ def dedup_entries(
         ValueError: If ``keep`` is not ``'first'`` or ``'last'``, or if
             ``fields`` contains an unrecognised field name.
     """
-    if keep not in ("first", "last"):
-        raise ValueError(f"keep must be 'first' or 'last', got {keep!r}")
-
-    unknown_fields = set(fields) - VALID_FIELDS
-    if unknown_fields:
-        raise ValueError(
-            f"unknown field(s): {sorted(unknown_fields)}; "
-            f"valid fields are {sorted(VALID_FIELDS)}"
-        )
-
-    if not fields:
-        raise ValueError("fields must not be empty")
+    _validate_dedup_args(fields, keep)
 
     if keep == "first":
         seen: set[str] = set()
