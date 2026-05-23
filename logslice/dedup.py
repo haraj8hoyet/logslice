@@ -7,6 +7,8 @@ from typing import Iterable, Iterator
 
 from logslice.parser import LogEntry
 
+VALID_FIELDS = frozenset({"level", "message", "source"})
+
 
 def _entry_key(entry: LogEntry, fields: tuple[str, ...]) -> str:
     """Build a hash key from selected fields of a log entry."""
@@ -30,14 +32,29 @@ def dedup_entries(
 
     Args:
         entries: Iterable of LogEntry objects.
-        fields: Fields used to determine duplicates.
+        fields: Fields used to determine duplicates. Valid values are
+            ``'level'``, ``'message'``, and ``'source'``.
         keep: ``'first'`` keeps the first occurrence; ``'last'`` keeps the last.
 
     Yields:
         Unique LogEntry objects according to the chosen strategy.
+
+    Raises:
+        ValueError: If ``keep`` is not ``'first'`` or ``'last'``, or if
+            ``fields`` contains an unrecognised field name.
     """
     if keep not in ("first", "last"):
         raise ValueError(f"keep must be 'first' or 'last', got {keep!r}")
+
+    unknown_fields = set(fields) - VALID_FIELDS
+    if unknown_fields:
+        raise ValueError(
+            f"unknown field(s): {sorted(unknown_fields)}; "
+            f"valid fields are {sorted(VALID_FIELDS)}"
+        )
+
+    if not fields:
+        raise ValueError("fields must not be empty")
 
     if keep == "first":
         seen: set[str] = set()
